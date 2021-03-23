@@ -64,12 +64,14 @@ private:
     /**********************************************************************/
     ComMonitor monitor;
     ComRobot robot;
+    Camera camera;
     int robotStarted = 0;
     int openCom = 0;
     int move = MESSAGE_ROBOT_STOP;
+    int WD =0;
+    int cnt_cam=0;
     uint8_t error_counter = 0;
-    uint8_t task_ready = 1;
-    
+
     /**********************************************************************/
     /* Tasks                                                              */
     /**********************************************************************/
@@ -80,9 +82,9 @@ private:
     RT_TASK th_startRobot;
     RT_TASK th_move;
     RT_TASK th_battery;
-    //RT_TASK th_lostCom_SupMon;
-    
-    //RT_TASK th_openCamera;
+    RT_TASK th_startCamera;
+    RT_TASK th_stopCamera;
+    RT_TASK th_watchdog;
     
     /**********************************************************************/
     /* Mutex                                                              */
@@ -91,8 +93,13 @@ private:
     RT_MUTEX mutex_robot;
     RT_MUTEX mutex_robotStarted;
     RT_MUTEX mutex_move;
+    //test avec WD
+    RT_MUTEX mutex_start;
+    RT_MUTEX mutex_camera;
+    RT_MUTEX mutex_watchdog;
     RT_MUTEX mutex_error_counter;
     RT_MUTEX mutex_openCom;
+    RT_MUTEX mutex_WD;
 
     /**********************************************************************/
     /* Semaphores                                                         */
@@ -101,7 +108,11 @@ private:
     RT_SEM sem_openComRobot;
     RT_SEM sem_serverOk;
     RT_SEM sem_startRobot;
-
+    RT_SEM sem_startCamera;
+    RT_SEM sem_stopCamera;
+    RT_SEM sem_watchdog;
+    RT_SEM sem_lostCom;
+        
     /**********************************************************************/
     /* Message queues                                                     */
     /**********************************************************************/
@@ -137,21 +148,33 @@ private:
     void StartRobotTask(void *arg);
     
     /**
+     * @brief Thread handling watchdog.
+     */
+    void WatchdogTask(void *arg);
+    
+    
+    /**
      * @brief Thread handling control of the robot.
      */
     void MoveTask(void *arg);
     
-    /**
-     * @brief Thread sending the battery's level.
+        /**
+     * @brief Thread handling battery.
      */
+    
     void BatteryTask(void *arg);
     
-
-   
-    /**
-     * @brief Thread opening camera.
+     /**
+     * @brief Thread handling start camera.
      */
-//    void OpenCamera(void *arg);
+    
+    void StartCameraTask(void *arg);
+    
+    /**
+     * @brief Thread handling stop camera.
+     */
+    
+    void StopCameraTask(void *arg);
     
     /**********************************************************************/
     /* Queue services                                                     */
@@ -169,13 +192,13 @@ private:
      * @return Message read
      */
     Message *ReadInQueue(RT_QUEUE *queue);
-    
-    /**
+
+        /**
     * @brief Checks errors comimg from the robot
     */   
     Message *WriteSurveillance(Message* msg);
     
-
+    
 };
 
 #endif // __TASKS_H__ 
